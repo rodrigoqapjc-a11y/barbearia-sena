@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel — Barbearia Sena</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#1c1b1a; --bg-alt:#26241f; --paper:#f5f1e8;
+    --gold:#c9a227; --gold-dark:#96771b; --line:rgba(245,241,232,0.14); --muted:rgba(245,241,232,0.6);
+    --green:#4caf6a; --red:#dc5c5c;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--paper); font-family:'Inter',sans-serif; line-height:1.5; min-height:100vh;}
+  h1,h2{font-family:'Playfair Display', serif;}
+  .wrap{max-width:900px; margin:0 auto; padding:40px 28px 80px;}
+  header{margin-bottom:36px;}
+  header .kicker{color:var(--gold); font-size:0.78rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:700; margin-bottom:8px;}
+  header h1{font-size:2.2rem;}
+
+  .filters{
+    display:flex; gap:16px; flex-wrap:wrap; margin-bottom:32px;
+    background:var(--bg-alt); border:1px solid var(--line); border-radius:10px; padding:22px;
+  }
+  .field{flex:1; min-width:180px;}
+  label{font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:600; display:block; margin-bottom:8px;}
+  select, input{
+    font-family:inherit; font-size:0.95rem; padding:11px 14px; width:100%;
+    background:var(--bg); color:var(--paper); border:1px solid var(--line); border-radius:4px;
+  }
+  select:focus, input:focus{outline:none; border-color:var(--gold);}
+
+  .summary{display:flex; gap:20px; margin-bottom:28px; flex-wrap:wrap;}
+  .summary-card{
+    background:var(--bg-alt); border:1px solid var(--line); border-radius:10px; padding:18px 22px; flex:1; min-width:140px;
+  }
+  .summary-card .num{font-family:'Playfair Display',serif; font-size:1.8rem; color:var(--gold);}
+  .summary-card .label{font-size:0.78rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.04em; margin-top:2px;}
+
+  .agenda-list{display:flex; flex-direction:column; gap:10px;}
+  .agenda-item{
+    background:var(--bg-alt); border:1px solid var(--line); border-radius:8px; padding:18px 20px;
+    display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  }
+  .time-badge{
+    background:var(--gold); color:var(--bg); font-weight:700; font-size:0.95rem;
+    padding:8px 14px; border-radius:6px; min-width:64px; text-align:center; flex-shrink:0;
+  }
+  .agenda-details{flex:1; min-width:200px;}
+  .agenda-details .cliente{font-weight:700; font-size:1rem;}
+  .agenda-details .info{color:var(--muted); font-size:0.85rem; margin-top:2px;}
+  .status-tag{
+    font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.03em;
+    padding:5px 12px; border-radius:999px; flex-shrink:0;
+  }
+  .status-confirmado{background:rgba(76,175,106,0.15); color:var(--green);}
+  .status-cancelado{background:rgba(220,92,92,0.15); color:var(--red);}
+
+  .empty-state{
+    text-align:center; padding:60px 20px; color:var(--muted); background:var(--bg-alt);
+    border:1px dashed var(--line); border-radius:10px;
+  }
+  .loading{text-align:center; padding:40px; color:var(--muted);}
+  .error-box{
+    background:rgba(220,60,60,0.1); border:1px solid var(--red); border-radius:6px;
+    padding:16px; color:#ff9d9d; font-size:0.9rem; display:none;
+  }
+  .error-box.show{display:block;}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+    <div>
+      <div class="kicker">Painel interno</div>
+      <h1>Agenda de horários</h1>
+    </div>
+    <button id="btnLogout" style="background:transparent; border:1px solid var(--line); color:var(--paper); padding:10px 18px; border-radius:4px; font-size:0.85rem; font-weight:600; cursor:pointer;">Sair</button>
+  </header>
+
+  <div class="filters">
+    <div class="field">
+      <label>Profissional</label>
+      <select id="filtroProfissional">
+        <option value="">Todos</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Data</label>
+      <input type="date" id="filtroData" />
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="error-box" id="errorBox"></div>
+  <div id="agendaContainer"><div class="loading">Carregando agenda...</div></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://snbqanugqywoenicfwdg.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_mClshIkNSNA6DUcaf64Ewg_kZSJlCkl';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Exige login antes de mostrar qualquer coisa do painel
+  supabaseClient.auth.getSession().then(({ data }) => {
+    if(!data.session){
+      window.location.href = 'barbearia-sena-login.html';
+    }
+  });
+
+  document.getElementById('btnLogout').addEventListener('click', async () => {
+    await supabaseClient.auth.signOut();
+    window.location.href = 'barbearia-sena-login.html';
+  });
+
+  const dataInput = document.getElementById('filtroData');
+  const hoje = new Date();
+  dataInput.value = hoje.toISOString().split('T')[0];
+
+  async function carregarProfissionais(){
+    const { data, error } = await supabaseClient.from('profissionais').select('*').order('nome');
+    if(error) return;
+    const select = document.getElementById('filtroProfissional');
+    data.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.nome;
+      select.appendChild(opt);
+    });
+  }
+
+  async function carregarAgenda(){
+    const errorBox = document.getElementById('errorBox');
+    errorBox.classList.remove('show');
+    const container = document.getElementById('agendaContainer');
+    container.innerHTML = '<div class="loading">Carregando agenda...</div>';
+
+    const profId = document.getElementById('filtroProfissional').value;
+    const data = document.getElementById('filtroData').value;
+
+    let query = supabaseClient
+      .from('agendamentos')
+      .select('id, data_hora, status, clientes(nome, telefone), servicos(nome, duracao_minutos, preco), profissionais(nome)')
+      .order('data_hora');
+
+    if(data){
+      query = query.gte('data_hora', data + 'T00:00:00').lte('data_hora', data + 'T23:59:59');
+    }
+    if(profId){
+      query = query.eq('profissional_id', profId);
+    }
+
+    const { data: agendamentos, error } = await query;
+
+    if(error){
+      errorBox.textContent = 'Erro ao carregar agenda: ' + error.message;
+      errorBox.classList.add('show');
+      container.innerHTML = '';
+      return;
+    }
+
+    renderSummary(agendamentos);
+
+    if(!agendamentos || agendamentos.length === 0){
+      container.innerHTML = '<div class="empty-state">Nenhum agendamento encontrado para esse filtro.</div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="agenda-list">' + agendamentos.map(a => {
+      const hora = new Date(a.data_hora).toTimeString().slice(0,5);
+      const cliente = a.clientes?.nome || 'Cliente';
+      const telefone = a.clientes?.telefone || '';
+      const servico = a.servicos?.nome || '';
+      const profissional = a.profissionais?.nome || '';
+      const statusClass = a.status === 'cancelado' ? 'status-cancelado' : 'status-confirmado';
+      return `
+        <div class="agenda-item">
+          <div class="time-badge">${hora}</div>
+          <div class="agenda-details">
+            <div class="cliente">${cliente}</div>
+            <div class="info">${servico} · ${profissional} · ${telefone}</div>
+          </div>
+          <div class="status-tag ${statusClass}">${a.status}</div>
+        </div>
+      `;
+    }).join('') + '</div>';
+  }
+
+  function renderSummary(agendamentos){
+    const total = agendamentos ? agendamentos.length : 0;
+    const confirmados = agendamentos ? agendamentos.filter(a => a.status === 'confirmado').length : 0;
+    document.getElementById('summary').innerHTML = `
+      <div class="summary-card"><div class="num">${total}</div><div class="label">Total no dia</div></div>
+      <div class="summary-card"><div class="num">${confirmados}</div><div class="label">Confirmados</div></div>
+    `;
+  }
+
+  document.getElementById('filtroProfissional').addEventListener('change', carregarAgenda);
+  document.getElementById('filtroData').addEventListener('change', carregarAgenda);
+
+  carregarProfissionais().then(carregarAgenda);
+</script>
+
+</body>
+</html>

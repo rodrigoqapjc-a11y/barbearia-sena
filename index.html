@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Barbearia Sena</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#1c1b1a; --bg-alt:#26241f; --paper:#f5f1e8;
+    --gold:#c9a227; --gold-dark:#96771b; --line:rgba(245,241,232,0.14); --muted:rgba(245,241,232,0.6);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg); color:var(--paper); font-family:'Inter',sans-serif; line-height:1.5;}
+  h1,h2,h3{font-family:'Playfair Display', serif; line-height:1.05;}
+  a{color:inherit; text-decoration:none;}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 28px;}
+  select, input{
+    font-family:inherit; font-size:0.95rem; padding:12px 14px;
+    background:var(--bg-alt); color:var(--paper); border:1px solid var(--line);
+    border-radius:4px; width:100%;
+  }
+  select:focus, input:focus{outline:none; border-color:var(--gold);}
+  label{font-size:0.8rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); font-weight:600; display:block; margin-bottom:8px;}
+  nav{position:sticky; top:0; z-index:50; background:rgba(28,27,26,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);}
+  nav .wrap{display:flex; align-items:center; justify-content:space-between; height:76px;}
+  .logo{font-family:'Playfair Display',serif; font-weight:700; font-size:1.4rem;}
+  .logo span{color:var(--gold);}
+  .nav-links{display:flex; gap:30px; font-size:0.88rem; font-weight:500;}
+  .nav-links a{opacity:0.75;}
+  @media(max-width:760px){.nav-links{display:none;}}
+  .hero{
+    position:relative; padding:160px 0 130px; border-bottom:1px solid var(--line); text-align:center;
+    overflow:hidden; min-height:70vh; display:flex; align-items:center; justify-content:center;
+    background-image:
+      linear-gradient(rgba(15,10,8,0.65), rgba(15,10,8,0.8)),
+      url('https://images.unsplash.com/photo-1634484144058-fbe30f770ca1?fm=jpg&q=80&w=1800&auto=format&fit=crop');
+    background-size:cover;
+    background-position:center center;
+  }
+  .hero .wrap{position:relative; z-index:1;}
+  .hero .kicker{color:var(--gold); font-size:0.8rem; letter-spacing:0.12em; text-transform:uppercase; font-weight:600; margin-bottom:20px;}
+  .hero h1{font-size:clamp(2.6rem,7vw,4.2rem); margin-bottom:20px; text-shadow:0 2px 30px rgba(0,0,0,0.6);}
+  .hero p{color:var(--muted); max-width:480px; margin:0 auto;}
+  .section{padding:70px 0; border-bottom:1px solid var(--line);}
+  .section .kicker{color:var(--gold); font-size:0.8rem; letter-spacing:0.1em; text-transform:uppercase; font-weight:600; margin-bottom:12px;}
+  .section h2{font-size:clamp(1.8rem,4vw,2.6rem); margin-bottom:40px;}
+  .booking-box{background:var(--bg-alt); border:1px solid var(--line); border-radius:10px; padding:36px; max-width:640px; margin:0 auto;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px;}
+  @media(max-width:600px){.field-row{grid-template-columns:1fr;}}
+  .field{margin-bottom:18px;}
+  .slots{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:6px;}
+  @media(max-width:600px){.slots{grid-template-columns:repeat(3,1fr);}}
+  .slot{padding:10px 6px; text-align:center; border:1px solid var(--line); border-radius:4px; font-size:0.85rem; cursor:pointer; transition:all .15s; background:var(--bg);}
+  .slot:hover{border-color:var(--gold);}
+  .slot.taken{opacity:0.3; cursor:not-allowed; text-decoration:line-through;}
+  .slot.selected{background:var(--gold); color:var(--bg); border-color:var(--gold); font-weight:600;}
+  .btn-primary{background:var(--gold); color:var(--bg); padding:15px 28px; font-weight:700; border:none; border-radius:4px; font-size:0.92rem; cursor:pointer; width:100%; margin-top:10px;}
+  .btn-primary:disabled{opacity:0.4; cursor:not-allowed;}
+  .confirm-box{margin-top:20px; padding:18px; background:rgba(201,162,39,0.1); border:1px solid var(--gold); border-radius:6px; font-size:0.9rem; display:none;}
+  .confirm-box.show{display:block;}
+  .error-box{margin-top:14px; padding:14px; background:rgba(220,60,60,0.1); border:1px solid #dc3c3c; border-radius:6px; font-size:0.85rem; color:#f0a; display:none;}
+  .error-box.show{display:block; color:#ff9d9d;}
+  .plans{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  @media(max-width:820px){.plans{grid-template-columns:1fr;}}
+  .plan-card{background:var(--bg-alt); border:1px solid var(--line); border-radius:10px; padding:32px 26px; display:flex; flex-direction:column;}
+  .plan-card.featured{border-color:var(--gold); position:relative;}
+  .plan-badge{position:absolute; top:-12px; left:26px; background:var(--gold); color:var(--bg); font-size:0.72rem; font-weight:700; text-transform:uppercase; padding:4px 12px; border-radius:999px;}
+  .plan-name{font-family:'Playfair Display',serif; font-size:1.3rem; margin-bottom:6px;}
+  .plan-price{font-size:2rem; font-weight:700; margin-bottom:4px;}
+  .plan-price span{font-size:0.95rem; color:var(--muted); font-weight:400;}
+  .plan-desc{color:var(--muted); font-size:0.88rem; margin-bottom:20px; flex:1;}
+  .plan-btn{text-align:center; padding:13px; border:1px solid var(--paper); border-radius:4px; font-weight:600; font-size:0.88rem; cursor:pointer; background:transparent; color:var(--paper);}
+  .plan-card.featured .plan-btn{background:var(--gold); color:var(--bg); border-color:var(--gold);}
+  footer{padding:34px 0; font-size:0.8rem; color:var(--muted); text-align:center;}
+  .loading{color:var(--muted); font-size:0.9rem; padding:20px 0; text-align:center;}
+
+  .gallery{display:grid; grid-template-columns:repeat(5,1fr); gap:14px;}
+  @media(max-width:900px){.gallery{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:560px){.gallery{grid-template-columns:repeat(2,1fr);}}
+  .photo-tile{
+    position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden;
+    background:var(--bg-alt); border:1px solid var(--line);
+  }
+  .photo-tile img{width:100%; height:100%; object-fit:cover; display:block;}
+  .photo-placeholder{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:6px; color:var(--muted); font-size:0.72rem; text-align:center; padding:10px;
+  }
+  .photo-placeholder .num{font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--gold); opacity:0.5;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">Barbearia <span>Sena</span></div>
+    <div class="nav-links"><a href="#agendar">Agendar</a><a href="#trabalho">Nosso Trabalho</a><a href="#planos">Planos</a></div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="kicker">Corte · Barba · Coloração</div>
+    <h1>Seu horário,<br>sem fila de espera.</h1>
+    <p>Agende online com o profissional que preferir, ou assine um plano mensal.</p>
+  </div>
+</section>
+
+<section class="section" id="agendar">
+  <div class="wrap">
+    <div class="kicker">Agendamento</div>
+    <h2>Marque seu horário</h2>
+
+    <div class="booking-box">
+      <div class="field-row">
+        <div class="field">
+          <label>Seu nome</label>
+          <input type="text" id="nomeCliente" placeholder="Digite seu nome" />
+        </div>
+        <div class="field">
+          <label>Seu telefone</label>
+          <input type="tel" id="telefoneCliente" placeholder="(11) 99999-9999" />
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label>Serviço</label>
+          <select id="servico"><option value="">Carregando...</option></select>
+        </div>
+        <div class="field">
+          <label>Profissional</label>
+          <select id="profissional"><option value="">Carregando...</option></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="data" />
+      </div>
+
+      <div class="field">
+        <label>Horários disponíveis</label>
+        <div class="slots" id="slots"><div class="loading">Selecione profissional e data</div></div>
+      </div>
+
+      <button class="btn-primary" id="confirmarBtn" disabled>Preencha os dados acima</button>
+      <div class="error-box" id="errorBox"></div>
+      <div class="confirm-box" id="confirmBox"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="trabalho">
+  <div class="wrap">
+    <div class="kicker">Galeria</div>
+    <h2>Nosso trabalho</h2>
+    <div class="gallery">
+      <div class="photo-tile"><img src="foto1.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">1</div>foto1.jpg</div></div>
+      <div class="photo-tile"><img src="foto2.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">2</div>foto2.jpg</div></div>
+      <div class="photo-tile"><img src="foto3.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">3</div>foto3.jpg</div></div>
+      <div class="photo-tile"><img src="foto4.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">4</div>foto4.jpg</div></div>
+      <div class="photo-tile"><img src="foto5.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">5</div>foto5.jpg</div></div>
+      <div class="photo-tile"><img src="foto6.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">6</div>foto6.jpg</div></div>
+      <div class="photo-tile"><img src="foto7.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">7</div>foto7.jpg</div></div>
+      <div class="photo-tile"><img src="foto8.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">8</div>foto8.jpg</div></div>
+      <div class="photo-tile"><img src="foto9.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">9</div>foto9.jpg</div></div>
+      <div class="photo-tile"><img src="foto10.jpg" onload="this.nextElementSibling.style.display='none'" onerror="this.style.display='none'"><div class="photo-placeholder"><div class="num">10</div>foto10.jpg</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="planos" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="kicker">Assinatura mensal</div>
+    <h2>Planos que cabem na sua rotina</h2>
+    <div class="plans" id="plansContainer">
+      <div class="loading">Carregando planos...</div>
+    </div>
+  </div>
+</section>
+
+<footer>© 2026 Barbearia Sena</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://snbqanugqywoenicfwdg.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_mClshIkNSNA6DUcaf64Ewg_kZSJlCkl';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const todosHorarios = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+  let horarioSelecionado = null;
+  let servicos = [];
+  let profissionais = [];
+
+  const dataInput = document.getElementById('data');
+  const hoje = new Date();
+  dataInput.min = hoje.toISOString().split('T')[0];
+  dataInput.value = hoje.toISOString().split('T')[0];
+
+  async function carregarDados(){
+    const { data: servicosData, error: errServicos } = await supabaseClient.from('servicos').select('*').order('preco');
+    const { data: profissionaisData, error: errProf } = await supabaseClient.from('profissionais').select('*').order('nome');
+    const { data: planosData, error: errPlanos } = await supabaseClient.from('planos_assinatura').select('*').order('preco_mensal');
+
+    if(errServicos || errProf || errPlanos){
+      document.getElementById('errorBox').textContent = 'Erro ao conectar com o banco de dados. Verifique a URL e a chave.';
+      document.getElementById('errorBox').classList.add('show');
+      return;
+    }
+
+    servicos = servicosData;
+    profissionais = profissionaisData;
+
+    const servicoSelect = document.getElementById('servico');
+    servicoSelect.innerHTML = servicos.map(s => `<option value="${s.id}">${s.nome} — R$ ${Number(s.preco).toFixed(2)} · ${s.duracao_minutos}min</option>`).join('');
+
+    const profSelect = document.getElementById('profissional');
+    profSelect.innerHTML = profissionais.map(p => `<option value="${p.id}">${p.nome}</option>`).join('');
+
+    renderPlanos(planosData);
+    renderSlots();
+  }
+
+  function renderPlanos(planos){
+    const container = document.getElementById('plansContainer');
+    container.innerHTML = planos.map((p, i) => `
+      <div class="plan-card ${i === 1 ? 'featured' : ''}">
+        ${i === 1 ? '<div class="plan-badge">Mais popular</div>' : ''}
+        <div class="plan-name">${p.nome}</div>
+        <div class="plan-price">R$ ${Number(p.preco_mensal).toFixed(0)}<span>/mês</span></div>
+        <div class="plan-desc">${p.descricao || ''}</div>
+        <div class="plan-btn" onclick="alert('Assinatura de ${p.nome} — aqui entraria a integração com Mercado Pago.')">Assinar plano</div>
+      </div>
+    `).join('');
+  }
+
+  async function renderSlots(){
+    const profId = document.getElementById('profissional').value;
+    const data = document.getElementById('data').value;
+    const container = document.getElementById('slots');
+    horarioSelecionado = null;
+    atualizarBotao();
+
+    if(!profId || !data){
+      container.innerHTML = '<div class="loading">Selecione profissional e data</div>';
+      return;
+    }
+
+    container.innerHTML = '<div class="loading">Verificando horários...</div>';
+
+    const inicioDia = data + 'T00:00:00';
+    const fimDia = data + 'T23:59:59';
+    const { data: agendamentosExistentes, error } = await supabaseClient
+      .from('horarios_ocupados')
+      .select('data_hora')
+      .eq('profissional_id', profId)
+      .gte('data_hora', inicioDia)
+      .lte('data_hora', fimDia);
+
+    const ocupados = (agendamentosExistentes || []).map(a => {
+      const d = new Date(a.data_hora);
+      return d.toTimeString().slice(0,5);
+    });
+
+    container.innerHTML = '';
+    todosHorarios.forEach(h => {
+      const div = document.createElement('div');
+      const taken = ocupados.includes(h);
+      div.className = 'slot' + (taken ? ' taken' : '');
+      div.textContent = h;
+      if(!taken){
+        div.addEventListener('click', () => {
+          document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+          div.classList.add('selected');
+          horarioSelecionado = h;
+          atualizarBotao();
+        });
+      }
+      container.appendChild(div);
+    });
+  }
+
+  function atualizarBotao(){
+    const btn = document.getElementById('confirmarBtn');
+    btn.disabled = !horarioSelecionado;
+    btn.textContent = horarioSelecionado ? 'Confirmar agendamento — ' + horarioSelecionado : 'Selecione um horário';
+  }
+
+  document.getElementById('profissional').addEventListener('change', renderSlots);
+  document.getElementById('data').addEventListener('change', renderSlots);
+
+  document.getElementById('confirmarBtn').addEventListener('click', async () => {
+    const errorBox = document.getElementById('errorBox');
+    errorBox.classList.remove('show');
+
+    const nome = document.getElementById('nomeCliente').value.trim();
+    const telefone = document.getElementById('telefoneCliente').value.trim();
+    const servicoId = document.getElementById('servico').value;
+    const profId = document.getElementById('profissional').value;
+    const data = document.getElementById('data').value;
+
+    if(!nome || !telefone){
+      errorBox.textContent = 'Preencha seu nome e telefone antes de confirmar.';
+      errorBox.classList.add('show');
+      return;
+    }
+    if(!horarioSelecionado) return;
+
+    const btn = document.getElementById('confirmarBtn');
+    btn.disabled = true;
+    btn.textContent = 'Salvando...';
+
+    let { data: agendamentoId, error: errRpc } = await supabaseClient.rpc('criar_agendamento', {
+      p_nome: nome,
+      p_telefone: telefone,
+      p_servico_id: servicoId,
+      p_profissional_id: profId,
+      p_data_hora: data + 'T' + horarioSelecionado + ':00'
+    });
+
+    if(errRpc){
+      errorBox.textContent = 'Erro ao salvar agendamento: ' + errRpc.message;
+      errorBox.classList.add('show');
+      btn.disabled = false;
+      atualizarBotao();
+      return;
+    }
+
+    const servicoNome = servicos.find(s => s.id === servicoId)?.nome || '';
+    const profNome = profissionais.find(p => p.id === profId)?.nome || '';
+    const box = document.getElementById('confirmBox');
+    box.innerHTML = `<strong>Agendamento confirmado no banco de dados</strong><br>${servicoNome} com ${profNome}<br>${data} às ${horarioSelecionado}`;
+    box.classList.add('show');
+
+    renderSlots();
+  });
+
+  carregarDados();
+</script>
+
+</body>
+</html>
